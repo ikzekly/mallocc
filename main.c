@@ -18,7 +18,7 @@
 
 typedef struct
 {
-    void* start;
+    char* start;
     size_t size;
 } Chunk;
 
@@ -41,13 +41,32 @@ void chunk_list_dump(const Chunk_List* list)
     }
 }
 
+int chunk_start_compar(const void* a, const void* b)
+{
+    const Chunk* a_chunk = a;
+    const Chunk* b_chunk = b;
+
+    return a_chunk->start - b_chunk->start;
+}
+
 int chunk_list_find(const Chunk_List* list, void* start)
 {
-    (void)list;
-    (void)start;
+    Chunk key = {.start = start};
 
-    NOT_IMPLEMENTED;
-    return -1;
+    Chunk* result = bsearch(
+        &key, list->chunks, list->count, sizeof(list->chunks[0]),
+        chunk_start_compar
+    );
+
+    if (result != 0)
+    {
+        assert(list->chunks <= result);
+        return (result - list->chunks) / sizeof(list->chunks[0]);
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 void chunk_list_insert(Chunk_List* list, void* start, size_t size)
@@ -100,24 +119,35 @@ void* heap_alloc(size_t size)
 
 void heap_free(void* start)
 {
-    (void)start;
+    if (start == NULL)
+    {
+        return;
+    };
 
-    NOT_IMPLEMENTED;
+    const int index = chunk_list_find(&alloced_chunks, start);
+    assert(index >= 0);
+
+    chunk_list_insert(
+        &freed_chunks, alloced_chunks.chunks[index].start,
+        alloced_chunks.chunks[index].size
+    );
+    chunk_list_remove(&alloced_chunks, (size_t)index);
 }
 
 void heap_collect() { NOT_IMPLEMENTED; }
 
 int main()
 {
-    for (int i = 0; i < 100; ++i)
+    for (int i = 0; i < 10; ++i)
     {
         void* p = heap_alloc(i);
-
         if (i % 2 == 0)
         {
             heap_free(p);
         }
     }
+
+    chunk_list_dump(&alloced_chunks);
 
     return 0;
 }
