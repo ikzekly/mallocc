@@ -19,6 +19,12 @@ size_t heap_alloced_size = 0;
 
 void* heap_alloc(size_t size)
 {
+
+    if (size <= 0)
+    {
+        return NULL;
+    };
+
     assert(heap_size + size <= HEAP_CAP);
     void* result = heap + heap_size;
     heap_size += size;
@@ -59,15 +65,12 @@ void heap_collect()
 
 int main()
 {
-    char* root = heap_alloc(26);
-    for (int i = 0; i < 26; ++i)
+    for (int i = 0; i < 100; ++i)
     {
-        root[i] = i + 'A';
+        heap_alloc(i);
     }
 
     heap_dump_alloced_chunks();
-
-    heap_free(root);
 
     return 0;
 }
