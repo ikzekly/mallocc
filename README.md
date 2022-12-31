@@ -1,0 +1,6 @@
+# mallocc
+
+```sh
+./run.sh
+```
+
