@@ -17,5 +17,8 @@ while getopts "b" flag; do
 done
 
 echo -e "\033[0;36mmallocc \$bash\033[0m\n\r"
-docker run --name mallocc -ti --rm -v $(pwd):/opt/app mallocc:1.0 bash
+docker run -ti --rm --name mallocc \
+    -v $(pwd):/opt/app \
+    -v ~/.vimrc:/root/.vimrc \
+	mallocc:1.0 bash
 
