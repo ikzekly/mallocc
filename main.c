@@ -88,10 +88,12 @@ void chunk_list_insert(Chunk_List* list, void* start, size_t size)
 
 void chunk_list_remove(Chunk_List* list, size_t index)
 {
-    (void)list;
-    (void)index;
+    assert(index < list->count);
 
-    NOT_IMPLEMENTED;
+    for (size_t i = index; i < list->count - 1; ++i) {
+        list->chunks[i] = list->chunks[i + 1];
+    }
+    list->count -=1;
 }
 
 char heap[HEAP_CAP] = {0};
