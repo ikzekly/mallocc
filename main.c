@@ -90,33 +90,50 @@ void chunk_list_remove(Chunk_List* list, size_t index)
 {
     assert(index < list->count);
 
-    for (size_t i = index; i < list->count - 1; ++i) {
+    for (size_t i = index; i < list->count - 1; ++i)
+    {
         list->chunks[i] = list->chunks[i + 1];
     }
-    list->count -=1;
+    list->count -= 1;
 }
 
 char heap[HEAP_CAP] = {0};
-size_t heap_size = 0;
 
 Chunk_List alloced_chunks = {0};
-Chunk_List freed_chunks = {0};
+Chunk_List freed_chunks = {
+    .count = 1,
+    .chunks = {[0] = {.start = heap, .size = sizeof(heap)}},
+};
 
 void* heap_alloc(size_t size)
 {
-
     if (size <= 0)
     {
         return NULL;
     };
 
-    assert(heap_size + size <= HEAP_CAP);
-    void* start = heap + heap_size;
-    heap_size += size;
+    for (size_t i = 0; i < freed_chunks.count; ++i)
+    {
+        const Chunk chunk = freed_chunks.chunks[i];
 
-    chunk_list_insert(&alloced_chunks, start, size);
+        if (chunk.size >= size)
+        {
+            Chunk chunk = freed_chunks.chunks[i];
+            chunk_list_remove(&freed_chunks, i);
 
-    return start;
+            const size_t tail_size = chunk.size - size;
+            chunk_list_insert(&alloced_chunks, chunk.start, size);
+
+            if (tail_size > 0)
+            {
+                chunk_list_insert(&freed_chunks, chunk.start + size, tail_size);
+            }
+
+            return chunk.start;
+        }
+    }
+
+    return NULL;
 }
 
 void heap_free(void* start)
@@ -150,6 +167,7 @@ int main()
     }
 
     chunk_list_dump(&alloced_chunks);
+    chunk_list_dump(&freed_chunks);
 
     return 0;
 }
