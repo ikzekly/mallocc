@@ -96,22 +96,15 @@ int chunk_start_compar(const void* a, const void* b)
 
 int chunk_list_find(const Chunk_List* list, void* start)
 {
-    Chunk key = {.start = start};
-
-    Chunk* result = bsearch(
-        &key, list->chunks, list->count, sizeof(list->chunks[0]),
-        chunk_start_compar
-    );
-
-    if (result != 0)
+    for (size_t i = 0; i < list->count; ++i)
     {
-        assert(list->chunks <= result);
-        return (result - list->chunks) / sizeof(list->chunks[0]);
+        if (list->chunks[i].start == start)
+        {
+            return (int)i;
+        }
     }
-    else
-    {
-        return -1;
-    }
+
+    return -1;
 }
 
 void chunk_list_remove(Chunk_List* list, size_t index)
@@ -178,6 +171,7 @@ void heap_free(void* start)
 
     const int index = chunk_list_find(&alloced_chunks, start);
     assert(index >= 0);
+    assert(start == alloced_chunks.chunks[index].start);
 
     chunk_list_insert(
         &freed_chunks, alloced_chunks.chunks[index].start,
@@ -193,7 +187,9 @@ int main()
     for (int i = 0; i < 10; ++i)
     {
         void* p = heap_alloc(i);
-        if (i % 2 == 0) {
+
+        if (i % 2 == 0)
+        {
             heap_free(p);
         }
     }
